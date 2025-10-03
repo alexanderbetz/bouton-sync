@@ -1,0 +1,21 @@
+{
+  "name": "shopify",
+  "version": "1.0.0",
+  "scripts": {
+    "sync:local": "ts-node --transpile-only src/sync-local-to-shopify.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "dotenv": "^16.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@shopify/shopify-api": "^11.0.0",
+    "undici": "^6.19.8"
+  }
+}
