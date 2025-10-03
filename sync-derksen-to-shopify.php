@@ -12,7 +12,7 @@ set_time_limit(0);
 $SHOP_DOMAIN        = getenv('SHOPIFY_SHOP_DOMAIN') ?: throw new RuntimeException('SHOPIFY_SHOP_DOMAIN is not set');
 $ACCESS_TOKEN       = getenv('SHOPIFY_ACCESS_TOKEN') ?: throw new RuntimeException('SHOPIFY_ACCESS_TOKEN is not set');
 $API_VERSION        = '2025-07';
-$LOCATION_GID       = getenv('SHOPIFY_LOCATION_GID') ?: throw new RuntimeException('SHOPIFY_LOCATION_GID is not set');
+$LOCATION_GID       = getenv('SHOPIFY_DERKSEN_LOCATION_GID') ?: throw new RuntimeException('SHOPIFY_DERKSEN_LOCATION_GID is not set');
 $CSV_URL            = getenv('CSV_URL') ?: throw new RuntimeException('CSV_URL is not set');
 
 // ------------------------

@@ -9,7 +9,7 @@ import { fetch } from "undici";
 // ------------------------
 const SHOP_DOMAIN = process.env.SHOPIFY_SHOP_DOMAIN || "";
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN || "";
-const LOCATION_GID = process.env.SHOPIFY_LOCATION_GID || "";
+const LOCATION_GID = process.env.SHOPIFY_LOCAL_LOCATION_GID || "";
 const R2O_API_TOKEN = process.env.R2O_API_TOKEN || "";
 
 if (!SHOP_DOMAIN || !ACCESS_TOKEN || !LOCATION_GID || !R2O_API_TOKEN) {
