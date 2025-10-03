@@ -23,4 +23,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Sync Local to Shopify
+        env:
+          SHOPIFY_SHOP_DOMAIN: ${{ secrets.SHOPIFY_SHOP_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          SHOPIFY_LOCAL_LOCATION_GID: ${{ secrets.SHOPIFY_LOCAL_LOCATION_GID }}
+          R2O_API_TOKEN: ${{ secrets.R2O_API_TOKEN }}
         run: pnpm run sync:local
