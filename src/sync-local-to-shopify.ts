@@ -13,7 +13,7 @@ const LOCATION_GID = process.env.SHOPIFY_LOCAL_LOCATION_GID || "";
 const R2O_API_TOKEN = process.env.R2O_API_TOKEN || "";
 
 if (!SHOP_DOMAIN || !ACCESS_TOKEN || !LOCATION_GID || !R2O_API_TOKEN) {
-  console.log(SHOP_DOMAIN, ACCESS_TOKEN, LOCATION_GID, R2O_API_TOKEN);
+  console.log(process.env);
   console.error(
     "Please set SHOPIFY_SHOP_DOMAIN, SHOPIFY_ACCESS_TOKEN, SHOPIFY_LOCAL_LOCATION_GID, R2O_API_TOKEN"
   );
