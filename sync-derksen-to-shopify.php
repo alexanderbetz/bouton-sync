@@ -396,6 +396,61 @@ GQL;
     }
 }
 
+function gql_list_inventory_at_location(string $shop, string $token, string $ver, string $locationGid): array {
+    $query = <<<'GQL'
+query($locationId: ID!, $cursor: String) {
+  location(id: $locationId) {
+    inventoryLevels(first: 250, after: $cursor) {
+      pageInfo { hasNextPage endCursor }
+      edges {
+        node {
+          item {
+            id
+            sku
+          }
+          quantities(names: ["on_hand"]) {
+            name
+            quantity
+          }
+        }
+      }
+    }
+  }
+}
+GQL;
+    $items = [];
+    $cursor = null;
+    do {
+        $vars = ['locationId' => $locationGid, 'cursor' => $cursor];
+        $res = shopify_graphql($shop, $token, $ver, $query, $vars);
+        $levels = $res['data']['location']['inventoryLevels'] ?? null;
+        if (!$levels) {
+            break;
+        }
+
+        foreach ($levels['edges'] as $edge) {
+            $node = $edge['node'];
+            $qty = 0;
+            foreach ($node['quantities'] ?? [] as $q) {
+                if ($q['name'] === 'on_hand') {
+                    $qty = (int)$q['quantity'];
+                    break;
+                }
+            }
+            $items[] = [
+                'inventoryItemId' => $node['item']['id'],
+                'sku' => trim($node['item']['sku'] ?? ''),
+                'quantity' => $qty,
+            ];
+        }
+
+        $pageInfo = $levels['pageInfo'];
+        $cursor = $pageInfo['hasNextPage'] ? $pageInfo['endCursor'] : null;
+    } while ($cursor !== null);
+
+    return $items;
+}
+
 function gql_inventory_set_on_hand(string $shop, string $token, string $ver, string $inventoryItemGid, string $locationGid, int $quantity): void {
     // Sets absolute on-hand quantities
     $mutation = <<<'GQL'
@@ -439,9 +494,10 @@ function main(): void {
     $products = parse_csv_products($csv);
     echo "Found " . count($products) . " rows.\n";
 
-    $processed = 0; $created = 0; $updated = 0; $priceUpdates = 0; $stockUpdates = 0;
+    $processed = 0; $created = 0; $updated = 0; $priceUpdates = 0; $stockUpdates = 0; $zeroedOut = 0;
     $totalProducts = count($products);
-    
+    $csvSkus = array_flip(array_column($products, 'sku'));
+
     foreach ($products as $p) {
         $sku = $p['sku'];
         $title = $p['title'];
@@ -493,7 +549,30 @@ function main(): void {
     // Final newline after progress updates
     echo "\n";
 
-    echo "Done. Processed={$processed}, Created={$created}, ProductMetaUpdated={$updated}, PriceUpdated={$priceUpdates}, StockUpdated={$stockUpdates}\n";
+    echo "Zeroing out Derksen items missing from CSV...\n";
+    $shopifyItems = gql_list_inventory_at_location($SHOP_DOMAIN, $ACCESS_TOKEN, $API_VERSION, $LOCATION_GID);
+    $missingCount = 0;
+    foreach ($shopifyItems as $item) {
+        $sku = $item['sku'];
+        if ($sku === '' || isset($csvSkus[$sku])) {
+            continue;
+        }
+        $missingCount++;
+        if ($item['quantity'] === 0) {
+            continue;
+        }
+        try {
+            gql_inventory_set_on_hand($SHOP_DOMAIN, $ACCESS_TOKEN, $API_VERSION, $item['inventoryItemId'], $LOCATION_GID, 0);
+            $zeroedOut++;
+        } catch (Throwable $e) {
+            fwrite(STDERR, "[SKU {$sku}] Zero-out error: " . $e->getMessage() . "\n");
+            usleep(300000);
+        }
+        usleep(120000);
+    }
+    echo "Missing from CSV: {$missingCount}, zeroed out: {$zeroedOut}\n";
+
+    echo "Done. Processed={$processed}, Created={$created}, ProductMetaUpdated={$updated}, PriceUpdated={$priceUpdates}, StockUpdated={$stockUpdates}, ZeroedOut={$zeroedOut}\n";
 }
 
 error_reporting(E_ERROR);
